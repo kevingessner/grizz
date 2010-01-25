@@ -1,0 +1,10 @@
+index.html:
+    templates/index.html
+
+oneline.html:
+    templates/foo.html
+    main: oneline.txt
+
+multiline.html:
+    templates/foo.html
+    main: multiline.txt
