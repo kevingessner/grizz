@@ -8,3 +8,17 @@ oneline.html:
 multiline.html:
     templates/foo.html
     main: multiline.txt
+
+inc1.html:
+    templates/one-nested.html
+
+inc2.html:
+    templates/two-nested.html
+    text: oneline.txt
+
+inc3.html:
+    templates/one-double-nested.html
+
+inc4.html:
+    templates/two-double-nested.html
+
