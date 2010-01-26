@@ -59,24 +59,16 @@ def render_file(file, files, root_path):
         for line in template:
             m = re.search(r'{(?P<name>\w+)}', line)
             if m:
-                if not ('content' in file and m.group('name') in file['content']):
-                    print('''warning: found content %s in template %s, but there's no associated file''' % (m.group('name'), file['template']))
-                else:
+                try:
                     span = m.span()
                     with open(os.path.join(root_path, file['content'][m.group('name')])) as content:
                         content_lines = content.readlines()
-                        if len(content_lines) == 1:
-                            ret.append(line[:span[0]] + content_lines[0].rstrip('\n') + line[span[1]:])
-                        else:
-                            i = 0
-                            for content_line in content_lines:
-                                if i == 0:
-                                    ret.append(line[:span[0]] + content_line)
-                                elif i == len(content_lines) - 1:
-                                    ret.append(content_line.rstrip('\n') + line[span[1]:])
-                                else:
-                                    ret.append(content_line)
-                                i += 1
+                        content_lines[0] = line[:span[0]] + content_lines[0]
+                        content_lines[-1] = content_lines[-1].rstrip('\n') + line[span[1]:]
+                        ret += content_lines
+                except:
+                    print('''warning: found content %s in template %s, but there's no associated file''' % (m.group('name'), file['template']))
+                    ret.append(line)
             else:
                 ret.append(line)
     return ret
