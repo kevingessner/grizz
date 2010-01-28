@@ -115,3 +115,12 @@ def replace_text_tags(lines, file, root_path):
         else:
             ret.append(line)
     return ret
+
+def render_from_manifest(manifest_path):
+    with open(manifest_path) as manifest:
+        files = manifest_to_files(manifest)
+    for f in files:
+        print '%s:' % f['path']
+        for line in render_file(f, files, os.path.dirname(manifest_path)):
+            print line,
+
