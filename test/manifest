@@ -1,4 +1,4 @@
-index.html:
+index.html: (home)
     templates/index.html
 
 oneline.html:
@@ -9,10 +9,10 @@ multiline.html:
     templates/foo.html
     main: multiline.txt
 
-inc1.html:
+directory/inc1.html: (inc1)
     templates/one-nested.html
 
-inc2.html:
+inc2.html: (inc2)
     templates/two-nested.html
     text: oneline.txt
 
@@ -21,4 +21,16 @@ inc3.html:
 
 inc4.html:
     templates/two-double-nested.html
+    text: multiline.txt
 
+url1.html:
+    templates/two-nested.html
+    text: link.txt
+
+url2.html:
+    templates/two-double-nested.html
+    text: link.txt
+
+url3.html:
+    templates/foo.html
+    main: link.txt
