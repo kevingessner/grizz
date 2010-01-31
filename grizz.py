@@ -8,6 +8,7 @@
 
 import os
 import re
+import markdown
 
 path_re = r'(?P<path>[-a-zA-Z0-9_./]+)'
 
@@ -107,8 +108,11 @@ def replace_text_tags(lines, file, root_path):
         m = re.search(r'{(?P<name>\w+)}', line)
         if m:
             span = m.span()
-            with open(os.path.join(root_path, file['content'][m.group('name')])) as content:
+            filename = file['content'][m.group('name')]
+            with open(os.path.join(root_path, filename)) as content:
                 content_lines = content.readlines()
+                if filename.endswith('.markdown'):
+                    content_lines = markdown.markdown(''.join(content_lines)).splitlines(True)
                 content_lines[0] = line[:span[0]] + content_lines[0]
                 content_lines[-1] = content_lines[-1].rstrip('\n') + line[span[1]:]
                 ret += content_lines

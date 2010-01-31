@@ -34,3 +34,8 @@ url2.html:
 url3.html:
     templates/foo.html
     main: link.txt
+
+markdown.html:
+    templates/foo.html
+    main: text.markdown
+
