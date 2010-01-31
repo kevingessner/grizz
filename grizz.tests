@@ -4,20 +4,20 @@
 >>> manifest_to_files("""
 ... /index.html:
 ... """.strip().split('\n'))
-[{'path': '/index.html'}]
+[{'path': 'index.html'}]
 
 >>> manifest_to_files("""
 ... /index.html:
 ...     templates/index.html
 ... """.strip().split('\n'))
-[{'path': '/index.html', 'template': 'templates/index.html'}]
+[{'path': 'index.html', 'template': 'templates/index.html'}]
 
 >>> manifest_to_files("""
 ... /directory/file.html:
 ...     templates/file.html
 ...     main: content/main.markdown
 ... """.strip().split('\n'))
-[{'content': {'main': 'content/main.markdown'}, 'path': '/directory/file.html', 'template': 'templates/file.html'}]
+[{'content': {'main': 'content/main.markdown'}, 'path': 'directory/file.html', 'template': 'templates/file.html'}]
 
 >>> manifest_to_files("""
 ... /directory/file.html:
@@ -25,7 +25,7 @@
 ...     main: content/main.markdown
 ...     footer: content/footer.markdown
 ... """.strip().split('\n'))
-[{'content': {'main': 'content/main.markdown', 'footer': 'content/footer.markdown'}, 'path': '/directory/file.html', 'template': 'templates/file.html'}]
+[{'content': {'main': 'content/main.markdown', 'footer': 'content/footer.markdown'}, 'path': 'directory/file.html', 'template': 'templates/file.html'}]
 
 >>> manifest_to_files("""
 ... /directory/file.html:
@@ -36,7 +36,7 @@
 ... /index.html:
 ...     templates/index.html
 ... """.strip().split('\n'))
-[{'content': {'main': 'content/main.markdown', 'footer': 'content/footer.markdown'}, 'path': '/directory/file.html', 'template': 'templates/file.html'}, {'path': '/index.html', 'template': 'templates/index.html'}]
+[{'content': {'main': 'content/main.markdown', 'footer': 'content/footer.markdown'}, 'path': 'directory/file.html', 'template': 'templates/file.html'}, {'path': 'index.html', 'template': 'templates/index.html'}]
 
 >>> manifest_to_files("""
 ... /directory/file.html:
