@@ -47,4 +47,32 @@
 ... /index.html: (home)
 ...     templates/index.html
 ... """.strip().split('\n'))
-[{'content': {'main': 'content/main.markdown', 'footer': 'content/footer.markdown'}, 'path': '/directory/file.html', 'template': 'templates/file.html'}, {'path': '/index.html', 'name': 'home', 'template': 'templates/index.html'}]
+[{'content': {'main': 'content/main.markdown', 'footer': 'content/footer.markdown'}, 'path': 'directory/file.html', 'template': 'templates/file.html'}, {'path': 'index.html', 'name': 'home', 'template': 'templates/index.html'}]
+
+>>> process_replacement_lines('', '', [])
+[]
+
+>>> process_replacement_lines('<p>', '</p>\n', ['abc\n'])
+['<p>abc</p>\n']
+
+>>> process_replacement_lines('<p>', '</p>\n', ['abc\n', 'def\n'])
+['<p>abc\n', 'def</p>\n']
+
+>>> process_replacement_lines('<p>', '</p>\n', ['abc\n', 'def\n', 'ghi\n'])
+['<p>abc\n', 'def\n', 'ghi</p>\n']
+
+>>> process_replacement_lines('    <p>', '</p>\n', ['abc\n'])
+['    <p>abc</p>\n']
+
+>>> process_replacement_lines('<p>', '</p>\n', ['abc\n', 'def\n'])
+['<p>abc\n', 'def</p>\n']
+
+>>> process_replacement_lines('<p>', '</p>\n', ['abc\n', 'def\n', 'ghi\n'])
+['<p>abc\n', 'def\n', 'ghi</p>\n']
+
+>>> process_replacement_lines('    <p>', '</p>\n', ['abc\n', 'def\n', 'ghi\n'])
+['    <p>abc\n', '    def\n', '    ghi</p>\n']
+
+>>> process_replacement_lines('    ', '\n', ['abc\n', 'def\n', 'ghi\n'])
+['    abc\n', '    def\n', '    ghi\n']
+

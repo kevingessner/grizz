@@ -84,6 +84,16 @@ def render_file(file, files, root_path):
             ret.append(line)
     return ret
 
+def process_replacement_lines(prefix, suffix, lines):
+    """returns a list with contents of lines, with the first line prefixed with prefix, the last line suffixed with suffix, and all lines prefixed with the leading whitespace of prefix"""
+    if not lines: return []
+    m = re.match(r'^(?P<ws>\s*)(?P<text>.*)$', prefix)
+    ws_prefix = m.group('ws')
+    prefix = m.group('text')
+    lines[0] = prefix + lines[0]
+    lines[-1] = lines[-1].rstrip('\n') + suffix
+    return [ws_prefix + line for line in lines]
+
 def replace_template_tags(lines, root_path):
     """replaces all {/path/to/template} tags with the text of the template, with the same replacement performed on the template. paths are relative to root_path, even if prefixed with /."""
     ret = []
@@ -94,9 +104,7 @@ def replace_template_tags(lines, root_path):
             template_path = m.group('path').lstrip('/')
             with open(os.path.join(root_path, template_path)) as template:
                 template_lines = replace_template_tags(template.readlines(), root_path)
-                template_lines[0] = line[:span[0]] + template_lines[0]
-                template_lines[-1] = template_lines[-1].rstrip('\n') + line[span[1]:]
-                ret += template_lines
+                ret += process_replacement_lines(line[:span[0]], line[span[1]:], template_lines)
         else:            
             ret.append(line)
     return ret
@@ -113,9 +121,7 @@ def replace_text_tags(lines, file, root_path):
                 content_lines = content.readlines()
                 if filename.endswith('.markdown'):
                     content_lines = markdown.markdown(''.join(content_lines)).splitlines(True)
-                content_lines[0] = line[:span[0]] + content_lines[0]
-                content_lines[-1] = content_lines[-1].rstrip('\n') + line[span[1]:]
-                ret += content_lines
+                ret += process_replacement_lines(line[:span[0]], line[span[1]:], content_lines)
         else:
             ret.append(line)
     return ret
