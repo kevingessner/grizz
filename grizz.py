@@ -133,10 +133,30 @@ def replace_text_tags(lines, file, file_provider, error_handler):
     return ret
 
 def render_from_manifest(manifest_path):
+    root_path = os.path.dirname(manifest_path)
+    out_path = os.path.join(root_path, 'out')
+    if not os.access(out_path, os.F_OK):
+        os.mkdir(out_path)
+
+    def file_provider(path):
+        try:
+            with open(os.path.join(root_path, path)) as f:
+                return f.readlines();
+        except IOError:
+            raise NoSuchFileError(e)
+    def error_handler(s):
+        print(s)
+
     with open(manifest_path) as manifest:
         files = manifest_to_files(manifest)
     for f in files:
         print '%s:' % f['path']
-        for line in render_file(f, files, os.path.dirname(manifest_path)):
-            print line,
+        lines = render_file(f, files, file_provider, error_handler)
+        out_file_path = os.path.join(out_path, f['path'])
+        if not os.access(os.path.dirname(out_file_path), os.F_OK):
+            os.makedirs(os.path.dirname(out_file_path))
+        with open(out_file_path, 'w') as out_file:
+            out_file.writelines(lines)
 
+if __name__ == '__main__':
+    render_from_manifest('./manifest')
