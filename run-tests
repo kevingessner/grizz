@@ -1,0 +1,3 @@
+#!/bin/bash
+python -m doctest -v grizz.tests
+python grizz.unittest.py

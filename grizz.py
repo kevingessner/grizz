@@ -19,6 +19,12 @@ class InvalidLineError(Exception):
     def __str__(self):
         return 'Invalid line: expecting %s, got "%s"' % (self.expected, self.line)
 
+class NoSuchFileError(Exception):
+    def __init__(self, path):
+        self.path = path
+    def __str__(self):
+        return self.path
+
 def manifest_to_files(manifest):
     """converts a manifest into a list of file objects, one per file in the manifest.
 
@@ -53,35 +59,31 @@ def manifest_to_files(manifest):
         ret.append(file)
     return ret
 
-def render_file(file, files, root_path):
+def render_file(file, files, file_provider, error_handler):
     """renders file into a list of strings, based on the given files"""
     ret = []
-    with open(os.path.join(root_path, file['template']), 'r') as template:
-        lines = template.readlines()
-        try:
-            lines = replace_template_tags(lines, root_path)
-        except IOError: # included file not found
-            print('''error: referenced template in %s not found; see following error''' % file['template'])
-            raise
-        
-        try:
-            lines = replace_text_tags(lines, file, root_path)
-        except IOError: # included file not found
-            print('''error: referenced content file in %s not found; see following error''' % file['path'])
-            raise
-        except KeyError as e: # content tag not found in manifest
-            print('''warning: content tag %s found in %s, but no replacement file is specified''' % (e, file['path']))
+    lines = file_provider(file['template'])
+    try:
+        lines = replace_template_tags(lines, file_provider)
+    except NoSuchFileError as e: # included file not found
+        error_handler('''error: referenced template %s in %s not found''' % (e, file['template']))
+    
+    try:
+        lines = replace_text_tags(lines, file, file_provider, error_handler)
+    except NoSuchFileError as e: # included file not found
+        error_handler('''error: referenced content file %s in %s not found; see following error''' % (e, file['path']))
+        raise
 
-        for line in lines:
-            m = re.search(r'{\@(?P<name>\w+)}', line)
-            if m:
-                span = m.span()
-                try:
-                    url = [file['path'] for file in files if 'name' in file and file['name'] == m.group('name')][0]
-                    line = line[:span[0]] + url + line[span[1]:]
-                except IndexError:
-                    print('''warning: referenced URL %s in %s not found''' % (m.group('name'), file['path']))
-            ret.append(line)
+    for line in lines:
+        m = re.search(r'{\@(?P<name>\w+)}', line)
+        if m:
+            span = m.span()
+            try:
+                url = [file['path'] for file in files if 'name' in file and file['name'] == m.group('name')][0]
+                line = line[:span[0]] + url + line[span[1]:]
+            except IndexError:
+                error_handler('''warning: referenced URL %s in %s not found''' % (m.group('name'), file['path']))
+        ret.append(line)
     return ret
 
 def process_replacement_lines(prefix, suffix, lines):
@@ -94,7 +96,7 @@ def process_replacement_lines(prefix, suffix, lines):
     lines[-1] = lines[-1].rstrip('\n') + suffix
     return [ws_prefix + line for line in lines]
 
-def replace_template_tags(lines, root_path):
+def replace_template_tags(lines, file_provider):
     """replaces all {/path/to/template} tags with the text of the template, with the same replacement performed on the template. paths are relative to root_path, even if prefixed with /."""
     ret = []
     for line in lines:
@@ -102,26 +104,30 @@ def replace_template_tags(lines, root_path):
         if m:
             span = m.span()
             template_path = m.group('path').lstrip('/')
-            with open(os.path.join(root_path, template_path)) as template:
-                template_lines = replace_template_tags(template.readlines(), root_path)
-                ret += process_replacement_lines(line[:span[0]], line[span[1]:], template_lines)
-        else:            
+            template_lines = file_provider(template_path)
+            template_lines = replace_template_tags(template_lines, file_provider)
+            ret += process_replacement_lines(line[:span[0]], line[span[1]:], template_lines)
+        else:
             ret.append(line)
     return ret
 
-def replace_text_tags(lines, file, root_path):
+def replace_text_tags(lines, file, file_provider, error_handler):
     """replaces all {name} tags with the associated text, given the information in file."""
     ret = []
     for line in lines:
         m = re.search(r'{(?P<name>\w+)}', line)
         if m:
             span = m.span()
-            filename = file['content'][m.group('name')]
-            with open(os.path.join(root_path, filename)) as content:
-                content_lines = content.readlines()
-                if filename.endswith('.markdown'):
-                    content_lines = markdown.markdown(''.join(content_lines)).splitlines(True)
-                ret += process_replacement_lines(line[:span[0]], line[span[1]:], content_lines)
+            try:
+                filename = file['content'][m.group('name')]
+            except KeyError as e: # content tag not found in manifest
+                error_handler('''warning: content tag %s found in %s, but no replacement file is specified''' % (e, file['path']))
+                ret.append(line)
+                continue
+            content_lines = file_provider(filename)
+            if filename.endswith('.markdown'):
+                content_lines = markdown.markdown(''.join(content_lines)).splitlines(True)
+            ret += process_replacement_lines(line[:span[0]], line[span[1]:], content_lines)
         else:
             ret.append(line)
     return ret
