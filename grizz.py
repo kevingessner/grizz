@@ -80,7 +80,7 @@ def render_file(file, files, file_provider, error_handler):
         if m:
             span = m.span()
             try:
-                url = [file['path'] for file in files if 'name' in file and file['name'] == m.group('name')][0]
+                url = [f['path'] for f in files if 'name' in f and f['name'] == m.group('name')][0]
                 line = line[:span[0]] + url + line[span[1]:]
             except IndexError:
                 error_handler('''warning: referenced URL %s in %s not found''' % (m.group('name'), file['path']))
