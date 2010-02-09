@@ -9,6 +9,7 @@
 import os
 import re
 import markdown
+import sys
 
 path_re = r'(?P<path>[-a-zA-Z0-9_./]+)'
 
@@ -132,7 +133,18 @@ def replace_text_tags(lines, file, file_provider, error_handler):
             ret.append(line)
     return ret
 
+def main():
+    if len(sys.argv) < 2:
+        print 'USAGE: %s (render|test)' % sys.argv[0]
+        sys.exit(1)
+    cmd = sys.argv[1]
+    if cmd == "render":
+        render_from_manifest('./manifest')
+    elif cmd == "test":
+        serve('./out/')
+
 def render_from_manifest(manifest_path):
+    """renders the site defined in the manifest at manifest_path to files"""
     root_path = os.path.dirname(manifest_path)
     out_path = os.path.join(root_path, 'out')
     if not os.access(out_path, os.F_OK):
@@ -150,7 +162,6 @@ def render_from_manifest(manifest_path):
     with open(manifest_path) as manifest:
         files = manifest_to_files(manifest)
     for f in files:
-        print '%s:' % f['path']
         lines = render_file(f, files, file_provider, error_handler)
         out_file_path = os.path.join(out_path, f['path'])
         if not os.access(os.path.dirname(out_file_path), os.F_OK):
@@ -158,5 +169,27 @@ def render_from_manifest(manifest_path):
         with open(out_file_path, 'w') as out_file:
             out_file.writelines(lines)
 
+     
+def serve(out_path):
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+    """starts a webserver at localhost:8080 serving the contents of the rendered site"""
+    class MyHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            try:
+                with open(os.path.join(out_path, self.path.lstrip('/')), 'r') as f:
+                    self.send_response(200)
+                    self.send_header('Content-type',    'text/html')
+                    self.end_headers()
+                    self.wfile.write(f.read())
+            except IOError:
+                self.send_error(404,'File Not Found: %s' % self.path)
+    try:
+        server = HTTPServer(('', 8080), MyHandler)
+        print 'started server at localhost:8080 (ctrl-c to quit)...'
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print '^C received, shutting down server'
+        server.socket.close()
+
 if __name__ == '__main__':
-    render_from_manifest('./manifest')
+    main()
