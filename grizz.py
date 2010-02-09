@@ -171,20 +171,12 @@ def render_from_manifest(manifest_path):
 
      
 def serve(out_path):
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
     """starts a webserver at localhost:8080 serving the contents of the rendered site"""
-    class MyHandler(BaseHTTPRequestHandler):
-        def do_GET(self):
-            try:
-                with open(os.path.join(out_path, self.path.lstrip('/')), 'r') as f:
-                    self.send_response(200)
-                    self.send_header('Content-type',    'text/html')
-                    self.end_headers()
-                    self.wfile.write(f.read())
-            except IOError:
-                self.send_error(404,'File Not Found: %s' % self.path)
+    from BaseHTTPServer import HTTPServer
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
     try:
-        server = HTTPServer(('', 8080), MyHandler)
+        os.chdir(out_path)
+        server = HTTPServer(('', 8080), SimpleHTTPRequestHandler)
         print 'started server at localhost:8080 (ctrl-c to quit)...'
         server.serve_forever()
     except KeyboardInterrupt:
