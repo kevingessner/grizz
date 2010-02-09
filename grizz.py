@@ -164,6 +164,8 @@ def render_from_manifest(manifest_path):
     for f in files:
         lines = render_file(f, files, file_provider, error_handler)
         out_file_path = os.path.join(out_path, f['path'])
+        if out_file_path.endswith('/'):
+            out_file_path += 'index.html'
         if not os.access(os.path.dirname(out_file_path), os.F_OK):
             os.makedirs(os.path.dirname(out_file_path))
         with open(out_file_path, 'w') as out_file:
