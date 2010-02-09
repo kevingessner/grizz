@@ -49,6 +49,17 @@
 ... """.strip().split('\n'))
 [{'content': {'main': 'content/main.markdown', 'footer': 'content/footer.markdown'}, 'path': 'directory/file.html', 'template': 'templates/file.html'}, {'path': 'index.html', 'name': 'home', 'template': 'templates/index.html'}]
 
+>>> manifest_to_files("""
+... /directory/file.html:
+...     templates/file.html
+...     main: content/main.markdown
+...     footer: content/footer.markdown
+...
+... /index.html: (home-page)
+...     templates/index.html
+... """.strip().split('\n'))
+[{'content': {'main': 'content/main.markdown', 'footer': 'content/footer.markdown'}, 'path': 'directory/file.html', 'template': 'templates/file.html'}, {'path': 'index.html', 'name': 'home-page', 'template': 'templates/index.html'}]
+
 >>> process_replacement_lines('', '', [])
 []
 

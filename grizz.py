@@ -12,6 +12,7 @@ import markdown
 import sys
 
 path_re = r'(?P<path>[-a-zA-Z0-9_./]+)'
+name_re = r'(?P<name>[\w-]+)'
 
 class InvalidLineError(Exception):
     def __init__(self, expected, line):
@@ -39,7 +40,7 @@ def manifest_to_files(manifest):
             ret.append(file)
             file = {}
         elif not 'path' in file:
-            m = re.match(path_re + ':(\s+\((?P<name>\w+)\))?', line)
+            m = re.match(path_re + ':(\s+\(' + name_re + '\))?', line)
             if not m: raise InvalidLineError('path', line)
             file['path'] = m.group('path').lstrip('/')
             if m.group('name'):
@@ -51,7 +52,7 @@ def manifest_to_files(manifest):
         else:
             if not 'content' in file:
                 file['content'] = {}
-            m = re.match(r'(?P<name>\w+): ' + path_re, line)
+            m = re.match(r'' + name_re + ': ' + path_re, line)
             if not m: raise InvalidLineError('content', line)
             if m.group('name') in file['content']:
                 raise Exception('found extra definition of %s content in %s' % (m.group('name'), file['path']))
@@ -76,7 +77,7 @@ def render_file(file, files, file_provider, error_handler):
         raise
 
     for line in lines:
-        m = re.search(r'{\@(?P<name>\w+)}', line)
+        m = re.search(r'{\@' + name_re + '}', line)
         if m:
             span = m.span()
             try:
@@ -116,7 +117,7 @@ def replace_text_tags(lines, file, file_provider, error_handler):
     """replaces all {name} tags with the associated text, given the information in file."""
     ret = []
     for line in lines:
-        m = re.search(r'{(?P<name>\w+)}', line)
+        m = re.search(r'{' + name_re + '}', line)
         if m:
             span = m.span()
             try:
