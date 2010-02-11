@@ -134,16 +134,6 @@ def replace_text_tags(lines, file, file_provider, error_handler):
             ret.append(line)
     return ret
 
-def main():
-    if len(sys.argv) < 2:
-        print 'USAGE: %s (render|test)' % sys.argv[0]
-        sys.exit(1)
-    cmd = sys.argv[1]
-    if cmd == "render":
-        render_from_manifest('./manifest')
-    elif cmd == "test":
-        serve('./out/')
-
 def render_from_manifest(manifest_path):
     """renders the site defined in the manifest at manifest_path to files"""
     root_path = os.path.dirname(manifest_path)
@@ -172,7 +162,6 @@ def render_from_manifest(manifest_path):
         with open(out_file_path, 'w') as out_file:
             out_file.writelines(lines)
 
-     
 def serve(out_path):
     """starts a webserver at localhost:8080 serving the contents of the rendered site"""
     from BaseHTTPServer import HTTPServer
@@ -185,6 +174,3 @@ def serve(out_path):
     except KeyboardInterrupt:
         print '^C received, shutting down server'
         server.socket.close()
-
-if __name__ == '__main__':
-    main()

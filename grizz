@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+import grizz
+import sys
+
+def main():
+    if len(sys.argv) < 2:
+        print 'USAGE: %s (render|test)' % sys.argv[0]
+        sys.exit(1)
+    cmd = sys.argv[1]
+    if cmd == "render":
+        grizz.render_from_manifest('./manifest')
+    elif cmd == "test":
+        grizz.serve('./out/')
+
+if __name__ == '__main__':
+    main()
