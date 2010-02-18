@@ -4,13 +4,16 @@ import grizz
 import sys
 
 def main():
-    if len(sys.argv) < 2:
-        print 'USAGE: %s (render|test)' % sys.argv[0]
+    PREVIEW_CMD = "preview"
+    RENDER_CMD = "render"
+    cmds = {"preview": PREVIEW_CMD, "render": RENDER_CMD, "test": PREVIEW_CMD}
+    if len(sys.argv) < 2 or sys.argv[1] not in cmds:
+        print 'USAGE: %s (%s|%s)' % (sys.argv[0], RENDER_CMD, PREVIEW_CMD)
         sys.exit(1)
-    cmd = sys.argv[1]
-    if cmd == "render":
+    cmd = cmds[sys.argv[1]]
+    if cmd == RENDER_CMD or cmd == PREVIEW_CMD:
         grizz.render_from_manifest('./manifest')
-    elif cmd == "test":
+    if cmd == PREVIEW_CMD:
         grizz.serve('./out/')
 
 if __name__ == '__main__':
