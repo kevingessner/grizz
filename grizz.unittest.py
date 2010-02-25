@@ -106,5 +106,39 @@ class GrizzTextReplaceTest(unittest.TestCase):
         lines = self.file_provider('text.tpl')
         self.assertRaises(NoSuchFileError, replace_text_tags, lines, {'path': 'error-test', 'content': {'text': 'nosuchfile'}}, self.file_provider, self.error_handler)
 
+class GrizzTextInfoReplaceTest(unittest.TestCase):
+    def setUp(self):
+        def file_provider(path):
+            try:
+                return {'notext.tpl': 'foo\nbar', 
+    'text.tpl': 'line\n{text}\nand more stuff\nandmore',
+    'info-text.tpl': '<p>{title}</p>\n<span>{text}</span>',
+    'info.txt': 'title: foo\nsummary: you get a summary\n\nsome text',
+    'no-info.txt': 'two\nlines'}[path].splitlines(True)
+            except:
+                raise NoSuchFileError(path)
+        self.file_provider = file_provider
+        
+        self.errors = []
+        self.error_handler = self.errors.append
+
+    def test_no_info(self):
+        lines = self.file_provider('text.tpl')
+        correct_lines = ['line\n', 'two\n', 'lines\n', 'and more stuff\n', 'andmore']
+        post_lines = replace_text_tags(lines, {'content': {'text': 'no-info.txt'} }, self.file_provider, self.error_handler)
+        self.assertEqual(correct_lines, post_lines)
+        self.assertEqual(self.errors, [])
+
+    def test_info(self):
+        lines = self.file_provider('info-text.tpl')
+        correct_lines = ['<p>foo</p>\n', '<span>some text</span>']
+        post_lines = replace_text_tags(lines, {'path': 'path', 'content': {'text': 'info.txt'} }, self.file_provider, self.error_handler)
+        self.assertEqual(correct_lines, post_lines)
+        self.assertEqual(self.errors, [])
+
+    def test_extract_info(self):
+        self.assertEqual(extract_info(self.file_provider('info.txt')), {'title': 'foo', 'summary': 'you get a summary'})
+        self.assertEqual(extract_info(self.file_provider('no-info.txt')), {})
+
 if __name__ == '__main__':
     unittest.main()
