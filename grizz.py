@@ -74,7 +74,7 @@ def render_file(file, files, file_provider, error_handler):
     try:
         lines = replace_text_tags(lines, file, file_provider, error_handler)
     except NoSuchFileError as e: # included file not found
-        error_handler('''error: referenced content file %s in %s not found; see following error''' % (e, file['path']))
+        error_handler('''error: referenced content file %s in /%s not found''' % (e, file['path']))
         raise
 
     for line in lines:
@@ -85,7 +85,7 @@ def render_file(file, files, file_provider, error_handler):
                 url = [f['path'] for f in files if 'name' in f and f['name'] == m.group('name')][0]
                 line = line[:span[0]] + url + line[span[1]:]
             except IndexError:
-                error_handler('''warning: referenced URL %s in %s not found''' % (m.group('name'), file['path']))
+                error_handler('''warning: referenced URL %s in /%s not found''' % (m.group('name'), file['path']))
         ret.append(line)
     return ret
 
@@ -154,7 +154,7 @@ def replace_text_tags(lines, file, file_provider, error_handler):
                 try:
                     content_lines = [info[m.group('name')]]
                 except KeyError as e: # no info found either
-                    error_handler('''warning: content tag %s found in %s, but no replacement file or named info is specified''' % (e, file['path']))
+                    error_handler('''warning: content tag %s found in /%s, but no replacement file or named info is specified''' % (e, file['path']))
                     ret.append(line)
                     continue
             ret += process_replacement_lines(line[:span[0]], line[span[1]:], content_lines)
@@ -173,15 +173,18 @@ def render_from_manifest(manifest_path):
         try:
             with open(os.path.join(root_path, path)) as f:
                 return f.readlines();
-        except IOError:
-            raise NoSuchFileError(e)
+        except IOError as e:
+            raise NoSuchFileError(e.filename)
     def error_handler(s):
         print(s)
 
     with open(manifest_path) as manifest:
         files = manifest_to_files(manifest)
     for f in files:
-        lines = render_file(f, files, file_provider, error_handler)
+        try:
+            lines = render_file(f, files, file_provider, error_handler)
+        except:
+            return False
         out_file_path = os.path.join(out_path, f['path'])
         if out_file_path.endswith('/'):
             out_file_path += 'index.html'
@@ -189,6 +192,7 @@ def render_from_manifest(manifest_path):
             os.makedirs(os.path.dirname(out_file_path))
         with open(out_file_path, 'w') as out_file:
             out_file.writelines(lines)
+    return True
 
 def serve(out_path):
     """starts a webserver at localhost:8080 serving the contents of the rendered site"""
