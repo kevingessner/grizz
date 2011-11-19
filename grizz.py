@@ -133,7 +133,9 @@ def replace_text_tags(lines, file, file_provider, error_handler):
             filename = file['content'][m.group('name')]
         except KeyError as e: # content tag not found in manifest; error next time
             continue
-        info.update(extract_info(file_provider(filename)))
+        for k, v in extract_info(file_provider(filename)).items():
+            if k not in info:
+                info[k] = v
 
     for line in lines:
         m = re.search(r'{' + name_re + '}', line)
