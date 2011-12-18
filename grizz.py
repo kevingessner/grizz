@@ -200,9 +200,14 @@ def serve(out_path):
     """starts a webserver at localhost:8080 serving the contents of the rendered site"""
     from BaseHTTPServer import HTTPServer
     from SimpleHTTPServer import SimpleHTTPRequestHandler
+
+    class Handler(SimpleHTTPRequestHandler):
+        def translate_path(self, path):
+            tpath = SimpleHTTPRequestHandler.translate_path(self, out_path + path)
+            return tpath
+
     try:
-        os.chdir(out_path)
-        server = HTTPServer(('', 8080), SimpleHTTPRequestHandler)
+        server = HTTPServer(('', 8080), Handler)
         print 'started server at localhost:8080 (ctrl-c to quit)...'
         server.serve_forever()
     except KeyboardInterrupt:
