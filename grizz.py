@@ -10,6 +10,7 @@ import os
 import re
 import markdown
 import sys
+import traceback
 
 path_re = r'(?P<path>[-a-zA-Z0-9_./]+)'
 name_re = r'(?P<name>[\w-]+)'
@@ -151,7 +152,7 @@ def replace_text_tags(lines, file, file_provider, error_handler):
                 if got_info:
                     content_lines = content_lines[1:]
                 if filename.endswith('.markdown'):
-                    content_lines = markdown.markdown(''.join(content_lines)).splitlines(True)
+                    content_lines = markdown.markdown(''.join(content_lines).decode('utf8')).splitlines(True)
             except KeyError as e: # content tag not found in manifest
                 try:
                     content_lines = [info[m.group('name')]]
@@ -185,7 +186,8 @@ def render_from_manifest(manifest_path):
     for f in files:
         try:
             lines = render_file(f, files, file_provider, error_handler)
-        except:
+        except Exception as e:
+            print '%s: %s\n%s' % (f, e.message, traceback.format_exc())
             return False
         out_file_path = os.path.join(out_path, f['path'])
         if out_file_path.endswith('/'):
@@ -193,7 +195,7 @@ def render_from_manifest(manifest_path):
         if not os.access(os.path.dirname(out_file_path), os.F_OK):
             os.makedirs(os.path.dirname(out_file_path))
         with open(out_file_path, 'w') as out_file:
-            out_file.writelines(lines)
+            out_file.writelines(s.encode('utf8') for s in lines)
     return True
 
 def serve(out_path):
