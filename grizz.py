@@ -10,6 +10,7 @@ import os
 import re
 import markdown
 import sys
+import time
 import traceback
 
 path_re = r'(?P<path>[-a-zA-Z0-9_./]+)'
@@ -145,24 +146,28 @@ def replace_text_tags(lines, file, file_provider, error_handler):
             if re.search(r'{' + name_re + '}', line[span[1]:]):
                 # TODO fix this bug for real
                 error_handler('''warning: multiple replacements found on line %d of /%s, but only the first will be replaced''' % (i, file['path']))
-            try:
-                filename = file['content'][m.group('name')]
-                content_lines = file_provider(filename)
-                got_info = False
-                while re.match(info_re, content_lines[0]):
-                    content_lines = content_lines[1:]
-                    got_info = True
-                if got_info:
-                    content_lines = content_lines[1:]
-                if filename.endswith('.markdown'):
-                    content_lines = markdown.markdown(''.join(content_lines).decode('utf8')).splitlines(True)
-            except KeyError as e: # content tag not found in manifest
+            name = m.group('name')
+            if name == '_now':
+                content_lines = [str(time.time())]
+            else:
                 try:
-                    content_lines = [info[m.group('name')]]
-                except KeyError as e: # no info found either
-                    error_handler('''warning: content tag %s found in /%s, but no replacement file or named info is specified''' % (e, file['path']))
-                    ret.append(line)
-                    continue
+                    filename = file['content'][name]
+                    content_lines = file_provider(filename)
+                    got_info = False
+                    while re.match(info_re, content_lines[0]):
+                        content_lines = content_lines[1:]
+                        got_info = True
+                    if got_info:
+                        content_lines = content_lines[1:]
+                    if filename.endswith('.markdown'):
+                        content_lines = markdown.markdown(''.join(content_lines).decode('utf8')).splitlines(True)
+                except KeyError as e: # content tag not found in manifest
+                    try:
+                        content_lines = [info[name]]
+                    except KeyError as e: # no info found either
+                        error_handler('''warning: content tag %s found in /%s, but no replacement file or named info is specified''' % (e, file['path']))
+                        ret.append(line)
+                        continue
             ret += process_replacement_lines(line[:span[0]], line[span[1]:], content_lines)
         else:
             ret.append(line)
