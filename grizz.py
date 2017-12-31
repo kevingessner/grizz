@@ -138,10 +138,13 @@ def replace_text_tags(lines, file, file_provider, error_handler):
             if k not in info:
                 info[k] = v
 
-    for line in lines:
+    for i, line in enumerate(lines):
         m = re.search(r'{' + name_re + '}', line)
         if m:
             span = m.span()
+            if re.search(r'{' + name_re + '}', line[span[1]:]):
+                # TODO fix this bug for real
+                error_handler('''warning: multiple replacements found on line %d of /%s, but only the first will be replaced''' % (i, file['path']))
             try:
                 filename = file['content'][m.group('name')]
                 content_lines = file_provider(filename)

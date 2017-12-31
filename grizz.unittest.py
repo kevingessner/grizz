@@ -67,7 +67,7 @@ class GrizzTextReplaceTest(unittest.TestCase):
     def setUp(self):
         def file_provider(path):
             try:
-                return {'notext.tpl': 'foo\nbar', 'text.tpl': 'line\n{text}\nand more stuff\nandmore', 'two-text.tpl': '<p>{text}</p>\n<span>{text_two}</span>', 'one.txt': 'some text', 'two.txt': 'two\nlines'}[path].splitlines(True)
+                return {'notext.tpl': 'foo\nbar', 'text.tpl': 'line\n{text}\nand more stuff\nandmore', 'two-text.tpl': '<p>{text}</p>\n<span>{text_two} -- {text}</span>', 'one.txt': 'some text', 'two.txt': 'two\nlines'}[path].splitlines(True)
             except:
                 raise NoSuchFileError(path)
         self.file_provider = file_provider
@@ -90,10 +90,12 @@ class GrizzTextReplaceTest(unittest.TestCase):
     
     def test_double_replacement(self):
         lines = self.file_provider('two-text.tpl')
-        correct_lines = ['<p>some text</p>\n', '<span>two\n', 'lines</span>']
-        post_lines = replace_text_tags(lines, {'content': {'text': 'one.txt', 'text_two': 'two.txt'} }, self.file_provider, self.error_handler)
+        correct_lines = ['<p>some text</p>\n', '<span>two\n', 'lines -- {text}</span>']
+        post_lines = replace_text_tags(lines, {'content': {'text': 'one.txt', 'text_two': 'two.txt'}, 'path': 'test' }, self.file_provider, self.error_handler)
         self.assertEqual(correct_lines, post_lines)
-        self.assertEqual(self.errors, [])
+        self.assertEqual(self.errors, [
+            'warning: multiple replacements found on line 1 of /test, but only the first will be replaced',
+        ])
 
     def test_error_replacement(self):
         lines = self.file_provider('text.tpl')
