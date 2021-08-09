@@ -135,7 +135,7 @@ def replace_text_tags(lines, file, file_provider, error_handler):
             filename = file['content'][m.group('name')]
         except KeyError as e: # content tag not found in manifest; error next time
             continue
-        for k, v in extract_info(file_provider(filename)).items():
+        for k, v in list(extract_info(file_provider(filename)).items()):
             if k not in info:
                 info[k] = v
 
@@ -160,7 +160,7 @@ def replace_text_tags(lines, file, file_provider, error_handler):
                     if got_info:
                         content_lines = content_lines[1:]
                     if filename.endswith('.markdown'):
-                        content_lines = markdown.markdown(''.join(content_lines).decode('utf8')).splitlines(True)
+                        content_lines = markdown.markdown(''.join(content_lines)).splitlines(True)
                 except KeyError as e: # content tag not found in manifest
                     try:
                         content_lines = [info[name]]
@@ -195,7 +195,7 @@ def render_from_manifest(manifest_path):
         try:
             lines = render_file(f, files, file_provider, error_handler)
         except Exception as e:
-            print '%s: %s\n%s' % (f, e.message, traceback.format_exc())
+            print('%s: %s\n%s' % (f, e, traceback.format_exc()))
             return False
         out_file_path = os.path.join(out_path, f['path'])
         if out_file_path.endswith('/'):
@@ -203,13 +203,13 @@ def render_from_manifest(manifest_path):
         if not os.access(os.path.dirname(out_file_path), os.F_OK):
             os.makedirs(os.path.dirname(out_file_path))
         with open(out_file_path, 'w') as out_file:
-            out_file.writelines(s.encode('utf8') for s in lines)
+            out_file.writelines(lines)
     return True
 
 def serve(out_path):
     """starts a webserver at localhost:8080 serving the contents of the rendered site"""
-    from BaseHTTPServer import HTTPServer
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from http.server import HTTPServer
+    from http.server import SimpleHTTPRequestHandler
 
     class Handler(SimpleHTTPRequestHandler):
         def translate_path(self, path):
@@ -218,8 +218,8 @@ def serve(out_path):
 
     try:
         server = HTTPServer(('', 8080), Handler)
-        print 'started server at localhost:8080 (ctrl-c to quit)...'
+        print('started server at localhost:8080 (ctrl-c to quit)...')
         server.serve_forever()
     except KeyboardInterrupt:
-        print '^C received, shutting down server'
+        print('^C received, shutting down server')
         server.socket.close()

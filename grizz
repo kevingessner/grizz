@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import grizz
 import os
@@ -19,16 +19,16 @@ class Handler(PatternMatchingEventHandler):
 def monitor(cwd):
     event_handler = Handler(cwd)
     observer = Observer()
-    observer.schedule(event_handler, path='', recursive=True)
+    observer.schedule(event_handler, path=cwd, recursive=True)
     observer.start()
     return observer
 
 def post_render():
     """post-render command: copy contents of in/ to out/"""
-    os.system("cp -R in/ out")
+    os.system("cp -R in/. out")
 
 def render(manifest):
-    print 'rendering...'
+    print('rendering...')
     if not grizz.render_from_manifest(manifest):
         return 1
     post_render()
@@ -38,7 +38,7 @@ def main():
     RENDER_CMD = "render"
     cmds = {"preview": PREVIEW_CMD, "render": RENDER_CMD, "test": PREVIEW_CMD}
     if len(sys.argv) < 2 or sys.argv[1] not in cmds:
-        print 'USAGE: %s (%s|%s)' % (sys.argv[0], RENDER_CMD, PREVIEW_CMD)
+        print('USAGE: %s (%s|%s)' % (sys.argv[0], RENDER_CMD, PREVIEW_CMD))
         sys.exit(1)
     cmd = cmds[sys.argv[1]]
     cwd = os.getcwd()
