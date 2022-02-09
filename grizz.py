@@ -17,6 +17,8 @@ path_re = r'(?P<path>[-a-zA-Z0-9_./]+)'
 name_re = r'(?P<name>[\w-]+)'
 info_re = r'^(?P<name>[^:]+):\s*(?P<contents>.+)\n$'
 
+NOW_TIME = int(time.time())
+
 class InvalidLineError(Exception):
     def __init__(self, expected, line):
         self.expected = expected
@@ -148,7 +150,7 @@ def replace_text_tags(lines, file, file_provider, error_handler):
                 error_handler('''warning: multiple replacements found on line %d of /%s, but only the first will be replaced''' % (i, file['path']))
             name = m.group('name')
             if name == '_now':
-                content_lines = [str(time.time())]
+                content_lines = [str(NOW_TIME)]
             else:
                 try:
                     filename = file['content'][name]
